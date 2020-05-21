@@ -1,0 +1,186 @@
+Get (all):
+----------
+'use strict';
+const AWS = require('aws-sdk'); // eslint-disable-line import/no-extraneous-dependencies
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
+const params = {
+  TableName: "maija-mytable",
+};
+module.exports.handler = (event, context, callback) => {
+  // fetch all todos from the database
+  dynamoDb.scan(params, (error, result) => {
+    // handle potential errors
+    if (error) {
+      console.error(error);
+      callback(null, {
+        statusCode: error.statusCode || 501,
+        headers: { 'Content-Type': 'text/plain' },
+        body: 'Couldn\'t fetch the measurement.',
+      });
+      return;
+    }
+    // create a response
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify(result.Items),
+    };
+    callback(null, response);
+  });
+};
+----------------------------------------------------
+Post:
+------
+'use strict'
+const AWS = require('aws-sdk');
+
+exports.handler = async (event, context) => {
+    const documentClient = new AWS.DynamoDB.DocumentClient();
+    let responseBody = "";
+    let statusCode = 0;
+    const { id, name, age } = JSON.parse(event.body);
+    const params = {
+        TableName: "maija-mytable",
+        Item: {
+            id: id,
+            name: name,
+            age: age
+        }
+    };
+
+    try {
+        const data = await documentClient.put(params).promise();
+        responseBody = JSON.stringify(data);
+        statusCode = 201;
+    } catch(err) {
+        responseBody = `Unable to put name: ${err}`;
+        statusCode = 403;
+    }
+    const response = {
+        statusCode: statusCode,
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: responseBody
+    };
+    
+    return response;
+};
+----------------------------------------------------
+Delete:
+-------
+'use strict'
+const AWS = require('aws-sdk');
+
+exports.handler = async (event, context) => {
+    const documentClient = new AWS.DynamoDB.DocumentClient();
+    let responseBody = "";
+    let statusCode = 0;
+    
+    const { id } = event.pathParameters;
+    const params = {
+        TableName: "maija-mytable",
+        Key: {
+            id: id
+        }
+    };
+
+
+    try {
+        const data = await documentClient.delete(params).promise();
+        responseBody = JSON.stringify(data);
+        statusCode = 201;
+    } catch(err) {
+        responseBody = `Unable to put name: ${err}`;
+        statusCode = 403;
+    }
+    const response = {
+        statusCode: statusCode,
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: responseBody
+    };
+    
+    return response;
+};
+----------------------------------------------------
+Get id
+-------
+'use strict'
+const AWS = require('aws-sdk');
+
+exports.handler = async (event, context) => {
+    const documentClient = new AWS.DynamoDB.DocumentClient();
+    let responseBody = "";
+    let statusCode = 0;
+    
+    const { id } = event.pathParameters;
+    const params = {
+        TableName: "maija-mytable",
+        Key: {
+            id: id
+        }
+    };
+
+
+    try {
+        const data = await documentClient.get(params).promise();
+        responseBody = JSON.stringify(data);
+        statusCode = 201;
+    } catch(err) {
+        responseBody = `Unable to put name: ${err}`;
+        statusCode = 403;
+    }
+    const response = {
+        statusCode: statusCode,
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: responseBody
+    };
+    
+    return response;
+};
+----------------------------------------------------
+Put:
+----
+'use strict'
+const AWS = require('aws-sdk');
+
+exports.handler = async (event, context) => {
+    const documentClient = new AWS.DynamoDB.DocumentClient();
+    let responseBody = "";
+    let statusCode = 0;
+    const { id, age } = JSON.parse(event.body);
+    
+    const params = {
+        TableName: "maija-mytable",
+        Key: {
+            id: id
+        },
+        UpdateExpression: "set age = :n",
+        ExpressionAttributeValues: {
+        ":n": age
+        },
+        ReturnValues: "UPDATED_NEW"
+    };
+
+    try {
+        const data = await documentClient.update(params).promise();
+        responseBody = JSON.stringify(data);
+        statusCode = 201;
+    } catch(err) {
+        responseBody = `Unable to put name: ${err}`;
+        statusCode = 403;
+    }
+    const response = {
+        statusCode: statusCode,
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: responseBody
+    };
+    
+    return response;
+};
+----------------------------------------------------------------------
